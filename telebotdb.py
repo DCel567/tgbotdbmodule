@@ -18,6 +18,11 @@ class Time:
         self.hour = _hour
         self.mins = _mins
 
+class Impact:
+    def __init__(self, _id, _sumprice):
+        self.id = _id
+        self.sum = _sumprice
+
 
 def make_connection():
     conn = psycopg2.connect(
@@ -45,13 +50,45 @@ def get_service():
     """Возвращает list имеющихся в бд сервисов"""
     con = make_connection()
     cursor = con.cursor()
-    cursor.execute('select * from master;')
+    cursor.execute('select * from service;')
     data = cursor.fetchall()
     con.close()
     services = []
     for m in data:
-        services.append(Master(m[0], m[1]))
+        services.append(Service(m[0], m[1], m[2]))
     return services
+
+def get_impact_by_service():
+    """Возвращает list айдишников сервисов и сумму сделанных по этому айди заказов"""
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute('select service.id_service, sum(service.price) '
+                   'from service '
+                   'INNER JOIN successful_order so '
+                   'ON service.id_service = so.id_service '
+                   'group by service.id_service;')
+    data = cursor.fetchall()
+    con.close()
+    impacts = []
+    for m in data:
+        impacts.append(Impact(m[0], m[1]))
+    return impacts
+
+def get_impact_by_master():
+    """Возвращает list айдишников мастеров и сумму сделанных по этому айди заказов"""
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute('select so.id_m, sum(service.price) '
+                   'from service '
+                   'INNER JOIN successful_order so '
+                   'ON service.id_service = so.id_service '
+                   'group by so.id_m;')
+    data = cursor.fetchall()
+    con.close()
+    impacts = []
+    for m in data:
+        impacts.append(Impact(m[0], m[1]))
+    return impacts
 
 def get_date_accessible():
     """Возвращает list объектов Time с полями day, hour, minute
@@ -100,7 +137,7 @@ def make_order(string_user, id_time, id_service, id_master):
     """Позволяет создать заказ в бд, без проверок, просто пуш"""
     con = make_connection()
     cursor = con.cursor()
-    cursor.execute("insert into successful_order (id_user, id_t, id_service, id_m) values ('%s', %d, %d, %d)"
+    cursor.execute("insert into successful_order (id_user, id_t, id_service, id_m) values ('%s', %d, %d, %d);"
                    % (string_user, id_time, id_service, id_master));
     con.commit()
     con.close()
