@@ -7,10 +7,16 @@ class Service:
         self.name = _name
         self.price = _price
 
+    def __str__(self):
+        return str(self.id) + " " + self.name + " " + str(self.price)
+
 class Master:
     def __init__(self, _id, _name):
         self.id = _id
         self.name = _name
+
+    def __str__(self):
+        return str(self.id) + " " + self.name
 
 class Time:
     def __init__(self, _id, _day, _hour, _mins):
@@ -19,10 +25,26 @@ class Time:
         self.hour = _hour
         self.mins = _mins
 
+    def __str__(self):
+        return str(self.id) + " " + str(self.day) + " " + str(self.hour) + " " + str(self.mins)
+
+class Order:
+    def __init__(self, _user, _id_time, _id_service, _id_master):
+        self.user = _user
+        self.id_t = _id_time
+        self.id_s = _id_service
+        self.id_m = _id_master
+
+    def __str__(self):
+        return self.user + " " + str(self.id_t) + " " + str(self.id_s) + " " + str(self.id_m)
+
 class Impact:
     def __init__(self, _id, _sumprice):
         self.id = _id
         self.sum = _sumprice
+
+    def __str__(self):
+        return str(self.id) + " " + str(self.sum)
 
 
 def make_connection():
@@ -58,6 +80,18 @@ def get_service():
     for m in data:
         services.append(Service(m[0], m[1], m[2]))
     return services
+
+def get_order():
+    """Возвращает list имеющихся в бд заказов"""
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute('select * from successful_order;')
+    data = cursor.fetchall()
+    con.close()
+    orders = []
+    for o in data:
+        orders.append(Order(o[0], o[1], o[2], o[3]))
+    return orders
 
 def get_impact_by_service():
     """Возвращает list айдишников сервисов и сумму сделанных по этому айди заказов"""
@@ -140,6 +174,15 @@ def make_order(string_user, id_time, id_service, id_master):
     cursor = con.cursor()
     cursor.execute("insert into successful_order (id_user, id_t, id_service, id_m) values ('%s', %d, %d, %d);"
                    % (string_user, id_time, id_service, id_master));
+    con.commit()
+    con.close()
+
+def delete_order(o: Order):
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute("delete from successful_order "
+                   "where id_user = %s and id_t = %d and id_service = %d and id_m = %d;"
+                   % (o.string_user, o.id_time, o.id_service, o.id_master));
     con.commit()
     con.close()
 
