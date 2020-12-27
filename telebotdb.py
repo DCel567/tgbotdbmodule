@@ -13,7 +13,8 @@ class Master:
         self.name = _name
 
 class Time:
-    def __init__(self, _day, _hour, _mins):
+    def __init__(self, _id, _day, _hour, _mins):
+        self.id = _id
         self.day = _day
         self.hour = _hour
         self.mins = _mins
@@ -96,19 +97,19 @@ def get_date_accessible():
     days = []
     con = make_connection()
     cursor = con.cursor()
-    cursor.execute(' select mt.id_m, twd.dw, time.time from master_timetable mt'
+    cursor.execute(' select twd.id_t, mt.id_m, twd.dw, time.time from master_timetable mt'
                    ' join time_with_day twd on mt.id_t = twd.id_t'
                    ' join time on time.id_time = twd.id_time'
                    ' where (mt.id_m, mt.id_t) not in (select id_m, id_t from successful_order);')
     data = cursor.fetchall()
     con.close()
     for d in data:
-        days.append([d[0], Time(d[1], d[2].hour, d[2].minute)])
+        days.append([d[1], Time(d[0], d[2], d[3].hour, d[3].minute)])
         #  чтобы получить данные из этого залупного метода нужно:
         #  его вызвать и чему-то присвоить: t = telebotdb.get_date_accessible() - это лист
         #  t[11] - одиннадцатый элемент списка
         #  t[11][0] - id мастера, t[11][1] - объект Time (см строку 15)
-        #  t[11][1].day - день, t[11][1].hour - час, t[11][2].mins - минуты
+        #  t[11][1].day - день, t[11][1].hour - час, t[11][1].mins - минуты, t[11][1].id
         #  соре ребят изящнее не придумал
     return days
 
@@ -118,7 +119,7 @@ def get_date_having_master(id_m: int):
     days = []
     con = make_connection()
     cursor = con.cursor()
-    cursor.execute(' select twd.dw, time.time from master_timetable mt'
+    cursor.execute(' select twd.id_t, twd.dw, time.time from master_timetable mt'
                    ' join time_with_day twd on mt.id_t = twd.id_t'
                    ' join time on time.id_time = twd.id_time'
                    ' where mt.id_m = %d'
@@ -126,11 +127,11 @@ def get_date_having_master(id_m: int):
     data = cursor.fetchall()
     con.close()
     for d in data:
-        days.append(Time(d[0], d[1].hour, d[1].minute))
+        days.append(Time(d[0], d[1], d[2].hour, d[2].minute))
         #  тут достать чуть проще, нету мастера:
         #  t = telebotdb.get_date_having_master(3) - это лист
         #  t[11] - одиннадцатый элемент
-        #  t[11].day  .hour  .mins
+        #  t[11].day  .hour  .mins .id
     return days
 
 def make_order(string_user, id_time, id_service, id_master):
