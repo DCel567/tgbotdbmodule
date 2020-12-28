@@ -93,6 +93,18 @@ def get_order():
         orders.append(Order(o[0], o[1], o[2], o[3]))
     return orders
 
+def get_order_having_user(user):
+    """Возвращает list имеющихся в бд заказов для конкретного юзера"""
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute("select * from successful_order where id_user = '%s';" % str(user))
+    data = cursor.fetchall()
+    con.close()
+    orders = []
+    for o in data:
+        orders.append(Order(o[0], o[1], o[2], o[3]))
+    return orders
+
 def get_impact_by_service():
     """Возвращает list айдишников сервисов и сумму сделанных по этому айди заказов"""
     con = make_connection()
