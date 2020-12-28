@@ -193,8 +193,8 @@ def delete_order(o: Order):
     con = make_connection()
     cursor = con.cursor()
     cursor.execute("delete from successful_order "
-                   "where id_user = %s and id_t = %d and id_service = %d and id_m = %d;"
-                   % (o.string_user, o.id_time, o.id_service, o.id_master));
+                   "where id_user = '%s' and id_t = %d and id_service = %d and id_m = %d;"
+                   % (o.user, o.id_t, o.id_s, o.id_m));
     con.commit()
     con.close()
 
