@@ -69,6 +69,20 @@ def get_master():
         masters.append(Master(m[0], m[1]))
     return masters
 
+def get_master_with_free_time():
+    """Возвращает list мастеров со свободным временем"""
+    con = make_connection()
+    cursor = con.cursor()
+    cursor.execute('select * from master where (select count(id_m) '
+                   'from master_timetable ) <> (select count(id_m) '
+                   'from successful_order);')
+    data = cursor.fetchall()
+    con.close()
+    masters = []
+    for m in data:
+        masters.append(Master(m[0], m[1]))
+    return masters
+
 def get_service():
     """Возвращает list имеющихся в бд сервисов"""
     con = make_connection()
